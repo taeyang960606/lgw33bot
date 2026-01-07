@@ -24,3 +24,12 @@ async def join_room_as_user(invite_token: str, user_id: int, username: str | Non
         if r.status_code != 200:
             raise RuntimeError(r.text)
         return r.json()
+
+async def get_user_balance(user_id: int) -> dict:
+    """获取用户余额"""
+    url = f"{API_URL}/api/users/{user_id}"
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.get(url)
+        if r.status_code != 200:
+            raise RuntimeError(r.text)
+        return r.json()

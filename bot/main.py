@@ -1,13 +1,14 @@
 import os
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 
 from .api_client import join_room_as_user, init_user
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+MINIAPP_URL = os.getenv("MINIAPP_URL", "https://web-production-a95dc.up.railway.app")
 
 dp = Dispatcher()
 
@@ -26,14 +27,27 @@ async def cmd_start(message: Message):
             f"👤 用户: @{username}\n"
             f"💰 初始余额: {user_data['available']} LGW33\n\n"
             f"📖 游戏规则：\n"
-            f"1️⃣ 创建房间并设置押注金额\n"
-            f"2️⃣ 分享邀请链接给好友\n"
-            f"3️⃣ 双方Ready后开始30秒点击PK\n"
-            f"4️⃣ 点击次数多的玩家获胜并赢得全部押注\n\n"
+            f"1️⃣ 点击下方按钮打开游戏\n"
+            f"2️⃣ 创建房间并设置押注金额\n"
+            f"3️⃣ 分享邀请链接给好友\n"
+            f"4️⃣ 双方Ready后开始30秒点击PK\n"
+            f"5️⃣ 点击次数多的玩家获胜并赢得全部押注\n\n"
             f"💡 使用 /chatid 获取群组ID用于分享房间"
         )
 
-        await message.reply(welcome_text)
+        # 创建 Web App 按钮
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="🎮 开始游戏",
+                web_app=WebAppInfo(url=MINIAPP_URL)
+            )],
+            [InlineKeyboardButton(
+                text="💰 查看余额",
+                callback_data="check_balance"
+            )]
+        ])
+
+        await message.reply(welcome_text, reply_markup=keyboard)
     except Exception as e:
         await message.reply(f"❌ 初始化失败: {str(e)}")
 
@@ -70,6 +84,21 @@ async def cmd_chatid(message: Message):
     if chat_type in ["group", "supergroup"]:
         print(f"群名称: {chat.title}")
     print(f"{'='*60}\n")
+
+@dp.callback_query(F.data == "check_balance")
+async def on_check_balance(callback: CallbackQuery):
+    """处理查看余额按钮"""
+    user = callback.from_user
+    try:
+        from .api_client import get_user_balance
+        balance = await get_user_balance(user.id)
+        await callback.answer(
+            f"💰 当前余额: {balance['available']} LGW33\n"
+            f"🔒 冻结: {balance['frozen']} LGW33",
+            show_alert=True
+        )
+    except Exception as e:
+        await callback.answer(f"❌ 查询失败: {str(e)}", show_alert=True)
 
 @dp.callback_query(F.data.startswith("join:"))
 async def on_join(callback: CallbackQuery):
