@@ -361,13 +361,12 @@ async def share_room(room_id: str, body: ShareRoomIn):
     )
 
     try:
-        print(f"[DEBUG] Sending invite message to chat_id={chat_id}, miniapp_url={MINIAPP_URL}")
+        print(f"[DEBUG] Sending invite message to chat_id={chat_id}")
         await send_invite_message(
             bot_token=BOT_TOKEN,
             chat_id=chat_id,
             text=text,
-            invite_token=room["invite_token"],
-            miniapp_url=MINIAPP_URL
+            invite_token=room["invite_token"]
         )
         print(f"[DEBUG] Invite message sent successfully")
     except Exception as e:
