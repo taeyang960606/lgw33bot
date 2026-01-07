@@ -11,15 +11,26 @@ from pydantic import BaseModel, Field
 from .db import init_db, get_conn
 from .tg_send import send_invite_message, send_game_result
 
+# 导入 Bot 相关
+from aiogram import Bot
+from aiogram.types import Update
+from bot.main import dp  # 导入 dispatcher
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "change_me")
 DEFAULT_BALANCE = int(os.getenv("DEFAULT_BALANCE", "1000"))
 DEFAULT_CHAT_ID = int(os.getenv("DEFAULT_CHAT_ID", "0"))  # 默认游戏群组ID
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+
+# Webhook 配置
+WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"
+WEBHOOK_URL = API_URL + WEBHOOK_PATH
 
 # 后台任务控制
 cleanup_task = None
+bot_instance = None
 
 # --------------------
 # Models
@@ -217,8 +228,16 @@ async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     # 启动时
     init_db()
-    global cleanup_task
+    global cleanup_task, bot_instance
     cleanup_task = asyncio.create_task(periodic_cleanup())
+
+    # 设置 Telegram Webhook
+    bot_instance = Bot(BOT_TOKEN)
+    await bot_instance.set_webhook(
+        url=WEBHOOK_URL,
+        drop_pending_updates=True
+    )
+
     print("=" * 60)
     print("🎮 LGW33 API 服务已启动")
     print("=" * 60)
@@ -226,6 +245,7 @@ async def lifespan(app: FastAPI):
     print("✅ 后台清理任务已启动 (每30秒检查一次)")
     print("   - OPEN状态房间: 5分钟后自动关闭")
     print("   - FULL状态房间: 2分钟后自动关闭")
+    print(f"✅ Telegram Webhook 已设置: {WEBHOOK_URL}")
     print("=" * 60)
 
     yield
@@ -237,9 +257,34 @@ async def lifespan(app: FastAPI):
             await cleanup_task
         except asyncio.CancelledError:
             pass
+
+    # 删除 Webhook
+    if bot_instance:
+        await bot_instance.delete_webhook()
+        await bot_instance.session.close()
+
     print("👋 LGW33 API 服务已关闭")
 
 app = FastAPI(title="LGW33 PK MVP", lifespan=lifespan)
+
+# --------------------
+# Telegram Webhook
+# --------------------
+@app.post(WEBHOOK_PATH)
+async def telegram_webhook(request: Request):
+    """接收 Telegram Webhook 更新"""
+    try:
+        update_data = await request.json()
+        update = Update(**update_data)
+
+        # 使用全局 bot 实例处理更新
+        if bot_instance:
+            await dp.feed_update(bot_instance, update)
+
+        return {"ok": True}
+    except Exception as e:
+        print(f"❌ Webhook 处理错误: {e}")
+        return {"ok": False, "error": str(e)}
 
 # --------------------
 # Routes
