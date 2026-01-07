@@ -456,9 +456,19 @@
   }
 
   function getUser() {
+    // 优先从 Telegram WebApp 获取用户信息
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+      const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+      return {
+        user_id: tgUser.id,
+        username: tgUser.username || tgUser.first_name || null
+      };
+    }
+
+    // 调试模式：从输入框获取
     const user_id = parseInt(document.getElementById("uid").value || "0", 10);
     const username = document.getElementById("uname").value || null;
-    if (!user_id) throw new Error("请先填写 user_id");
+    if (!user_id) throw new Error("请先填写 user_id 或从 Telegram 打开");
     return { user_id, username };
   }
 
@@ -846,7 +856,7 @@
   }
 
   // 绑定点击事件
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     const tapBtn = document.getElementById('tapBtn');
     if (tapBtn) {
       tapBtn.addEventListener('pointerdown', clickGame);
@@ -856,6 +866,27 @@
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
+
+      // 自动获取并显示用户余额
+      try {
+        const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+        if (tgUser) {
+          // 自动查询余额
+          const r = await fetch(`${API}/api/users/${tgUser.id}`);
+          const balanceEl = document.getElementById("balance");
+
+          if (r.ok) {
+            const data = await r.json();
+            balanceEl.textContent = data.available.toLocaleString();
+          } else {
+            // 用户不存在，显示默认余额
+            balanceEl.textContent = "1000";
+          }
+        }
+      } catch (e) {
+        console.error("获取余额失败:", e);
+        document.getElementById("balance").textContent = "--";
+      }
     }
 
     // 自动填充调试信息（开发用）
@@ -863,6 +894,9 @@
       document.getElementById('debugSection').style.display = 'block';
       document.getElementById('uid').value = '12345';
       document.getElementById('uname').value = 'player1';
+
+      // 本地开发时也自动查询余额
+      setTimeout(() => checkBalance(), 500);
     }
   });
 </script>
