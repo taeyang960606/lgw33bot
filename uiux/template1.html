@@ -1,0 +1,707 @@
+<!-- index.html  （LGW33 Token Mini App - Home UI Demo）
+     用法：把这个文件保存为 index.html，然后双击打开
+     或者用 VSCode + Live Server 打开
+-->
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>LGW33 Token — Home</title>
+  <style>
+    :root{
+      --bgTop:#0b0e14;
+      --bgMid:#0a1730;
+      --bgBlue:#0a66ff;
+      --card:#0f1726cc;
+      --card2:#0f1726;
+      --text:#eaf0ff;
+      --muted:#a9b6d9;
+      --line:rgba(255,255,255,.10);
+      --gold1:#ffd36a;
+      --gold2:#ffb11a;
+      --brand:#2b7cff;
+      --brand2:#00d1ff;
+      --shadow:0 18px 50px rgba(0,0,0,.45);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC",
+                   "Microsoft YaHei", Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 50% 10%, #19224a 0%, var(--bgTop) 45%, #06070b 100%);
+      min-height:100vh;
+    }
+
+    /* 手机安全区域 */
+    .safe{
+      padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom) 14px;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* 顶部栏 */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 2px 8px 2px;
+      gap:12px;
+    }
+    .user{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .avatar{
+      width:38px;height:38px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
+      border:1px solid var(--line);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      display:grid;place-items:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .avatar::after{
+      content:"";
+      position:absolute; inset:-30%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.25), transparent 60%);
+      transform: rotate(18deg);
+    }
+    .avatar span{
+      position:relative;
+      font-weight:800;
+      letter-spacing:.5px;
+      font-size:14px;
+      opacity:.95;
+    }
+    .namewrap{min-width:0}
+    .name{
+      font-weight:700;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      opacity:.95;
+    }
+    .sub{
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-top:2px;
+    }
+    .chip{
+      font-size:10px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: rgba(234,240,255,.92);
+    }
+
+    .brandTitle{
+      flex:1;
+      text-align:center;
+      font-weight:900;
+      letter-spacing:1px;
+      font-size:14px;
+      opacity:.98;
+    }
+    .brandTitle .logo{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 14px;
+      border-radius:999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+    }
+    .brandTitle .dot{
+      width:8px;height:8px;border-radius:50%;
+      background: linear-gradient(180deg, var(--gold1), var(--gold2));
+      box-shadow: 0 0 18px rgba(255, 191, 51, .55);
+    }
+
+    .faq{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: rgba(234,240,255,.92);
+      font-weight:700;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    /* 主卡：Token 数字 */
+    .hero{
+      margin-top:6px;
+      padding: 10px 0 0;
+    }
+    .tokenRow{
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      gap:10px;
+      margin-top:6px;
+    }
+    .coin{
+      width:34px;height:34px;border-radius:12px;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.9), rgba(255,255,255,.15) 35%, rgba(0,0,0,.0) 36%),
+                  linear-gradient(180deg, var(--gold1), var(--gold2));
+      box-shadow: 0 10px 30px rgba(255,184,35,.20), 0 0 22px rgba(255,184,35,.22);
+      border:1px solid rgba(0,0,0,.25);
+      position:relative;
+    }
+    .coin::after{
+      content:"LG";
+      position:absolute; inset:0;
+      display:grid;place-items:center;
+      font-weight:1000;
+      color: rgba(20,20,20,.75);
+      font-size:12px;
+      letter-spacing:.5px;
+    }
+    .token{
+      font-size:42px;
+      font-weight:1000;
+      letter-spacing:.5px;
+      line-height:1;
+      text-shadow: 0 10px 30px rgba(0,0,0,.45);
+    }
+    .tokenLabel{
+      text-align:center;
+      color: var(--muted);
+      font-size:12px;
+      margin-top:6px;
+    }
+
+    /* 小条：Cash / Web2 / Airdrop */
+    .miniBar{
+      margin: 12px auto 0;
+      width: min(360px, 100%);
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      box-shadow: 0 14px 40px rgba(0,0,0,.25);
+      font-size:12px;
+      color: rgba(234,240,255,.92);
+      cursor:pointer;
+      user-select:none;
+    }
+    .pill .icon{
+      width:26px;height:26px;border-radius:10px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .pill .badge{
+      width:8px;height:8px;border-radius:50%;
+      background: #ff3b3b;
+      box-shadow: 0 0 12px rgba(255,59,59,.55);
+      margin-left:4px;
+    }
+
+    /* 背景：蓝色主场景 + 角色 */
+    .stage{
+      margin-top: 12px;
+      border-radius: 28px;
+      background:
+        radial-gradient(900px 520px at 50% 15%, rgba(50,140,255,.28), transparent 55%),
+        radial-gradient(800px 480px at 50% 75%, rgba(0,209,255,.22), transparent 55%),
+        linear-gradient(180deg, var(--bgMid), var(--bgBlue));
+      box-shadow: var(--shadow);
+      border:1px solid rgba(255,255,255,.08);
+      position:relative;
+      overflow:hidden;
+      padding: 16px 14px 120px 14px;
+    }
+
+    /* 漂浮光点 */
+    .spark{
+      position:absolute; inset:-40px;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,.18) 0 2px, transparent 3px),
+        radial-gradient(circle at 72% 22%, rgba(255,255,255,.15) 0 2px, transparent 3px),
+        radial-gradient(circle at 55% 62%, rgba(255,255,255,.12) 0 2px, transparent 3px),
+        radial-gradient(circle at 30% 70%, rgba(255,255,255,.12) 0 2px, transparent 3px);
+      opacity:.85;
+      filter: blur(.2px);
+      pointer-events:none;
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%,100%{transform: translateY(0)}
+      50%{transform: translateY(10px)}
+    }
+
+    /* 中央 Mascot 占位（你之后换成真实 PNG/WebP） */
+    .mascot{
+      margin: 10px auto 0;
+      width: 240px;
+      aspect-ratio: 3/4;
+      border-radius: 40px;
+      background:
+        radial-gradient(circle at 35% 25%, rgba(255,255,255,.35), rgba(255,255,255,.05) 52%, transparent 53%),
+        linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.10));
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 30px 80px rgba(0,0,0,.35);
+      display:grid;
+      place-items:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .mascot::before{
+      content:"LGW33\nMASCOT";
+      white-space:pre;
+      text-align:center;
+      font-weight:1000;
+      letter-spacing:1px;
+      line-height:1.15;
+      opacity:.92;
+      font-size:20px;
+      text-shadow: 0 12px 30px rgba(0,0,0,.4);
+    }
+    .mascot small{
+      position:absolute;
+      bottom:14px;
+      font-size:11px;
+      color: rgba(234,240,255,.8);
+      opacity:.9;
+    }
+
+    /* 两侧快捷入口 */
+    .quickGrid{
+      position:absolute;
+      left:0; right:0;
+      top: 120px;
+      padding: 0 12px;
+      display:flex;
+      justify-content:space-between;
+      pointer-events:none; /* 让中间可滚动不影响 */
+    }
+    .qcol{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      pointer-events:auto; /* 恢复点击 */
+    }
+    .qbtn{
+      width:86px;
+      border-radius: 18px;
+      padding: 10px 10px 8px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(10, 20, 40, .28);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 18px 45px rgba(0,0,0,.25);
+      cursor:pointer;
+      user-select:none;
+    }
+    .qbtn .qicon{
+      width:34px;height:34px;border-radius:14px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
+      font-size:18px;
+      margin-bottom:8px;
+    }
+    .qbtn .qt{
+      font-weight:800;
+      font-size:12px;
+      opacity:.95;
+    }
+    .qbtn .qs{
+      font-size:10px;
+      color: rgba(234,240,255,.78);
+      margin-top:4px;
+    }
+    .qbtn .notif{
+      position:absolute;
+      transform: translate(58px, -42px);
+      width:18px;height:18px;border-radius:999px;
+      background:#ff3b3b;
+      display:grid;place-items:center;
+      font-size:11px;
+      font-weight:900;
+      box-shadow: 0 0 16px rgba(255,59,59,.55);
+      border: 2px solid rgba(10, 40, 110, .8);
+    }
+
+    /* 底部能量条 */
+    .energy{
+      position:absolute;
+      left:14px; right:14px;
+      bottom: 74px;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(10, 20, 40, .24);
+      backdrop-filter: blur(10px);
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .bolt{
+      width:34px;height:34px;border-radius:14px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
+      font-size:18px;
+    }
+    .ebody{flex:1}
+    .eline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-size:12px;
+      font-weight:800;
+    }
+    .eline span{color: rgba(234,240,255,.9)}
+    .eline em{
+      font-style:normal;
+      color: rgba(234,240,255,.75);
+      font-weight:700;
+      font-size:11px;
+    }
+    .bar{
+      height:10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.12);
+      overflow:hidden;
+      margin-top:8px;
+      border: 1px solid rgba(0,0,0,.15);
+    }
+    .fill{
+      height:100%;
+      width: 64%;
+      border-radius:999px;
+      background: linear-gradient(90deg, var(--brand2), var(--brand));
+      box-shadow: 0 0 18px rgba(43,124,255,.35);
+    }
+
+    /* 底部导航 */
+    .nav{
+      position:absolute;
+      left:14px; right:14px;
+      bottom: 14px;
+      height: 54px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(10, 20, 40, .22);
+      backdrop-filter: blur(10px);
+      display:flex;
+      align-items:center;
+      justify-content:space-around;
+      box-shadow: 0 16px 40px rgba(0,0,0,.25);
+    }
+    .nav .item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      color: rgba(234,240,255,.85);
+      font-weight:800;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .nav .item.active{
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.14);
+      color: rgba(234,240,255,.96);
+    }
+    .nav .i{
+      width:26px;height:26px;border-radius:12px;
+      display:grid;place-items:center;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:14px;
+    }
+
+    /* 小提示 toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(10, 14, 22, .85);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(234,240,255,.92);
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 999;
+      max-width: 92vw;
+      text-align:center;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="safe">
+    <!-- 顶部 -->
+    <div class="topbar">
+      <div class="user">
+        <div class="avatar"><span>LG</span></div>
+        <div class="namewrap">
+          <div class="name">Ferrari</div>
+          <div class="sub">
+            <span class="chip">Lv. 1</span>
+            <span>Online</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="brandTitle">
+        <span class="logo"><span class="dot"></span> LGW33</span>
+      </div>
+
+      <div class="faq" id="faqBtn">FAQ</div>
+    </div>
+
+    <!-- Token 数字 -->
+    <section class="hero">
+      <div class="tokenRow">
+        <div class="coin" aria-hidden="true"></div>
+        <div class="token" id="tokenNum">75,187</div>
+      </div>
+      <div class="tokenLabel">LGW33 Token Balance</div>
+
+      <div class="miniBar">
+        <div class="pill" data-action="wallet">
+          <span class="icon">💰</span>
+          <b>Wallet</b>
+          <span style="color:var(--muted);font-weight:800">0</span>
+        </div>
+        <div class="pill" data-action="web2">
+          <span class="icon">🌐</span>
+          <b>Web2</b>
+        </div>
+        <div class="pill" data-action="airdrop">
+          <span class="icon">🎁</span>
+          <b>Airdrop</b><span class="badge" title="new"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 蓝色主舞台 -->
+    <section class="stage">
+      <div class="spark" aria-hidden="true"></div>
+
+      <!-- 两侧快捷入口 -->
+      <div class="quickGrid">
+        <div class="qcol">
+          <div class="qbtn" data-action="daily">
+            <div class="qicon">🎁</div>
+            <div class="qt">Daily Chest</div>
+            <div class="qs">Open & earn</div>
+          </div>
+
+          <div class="qbtn" data-action="friends" style="position:relative">
+            <div class="qicon">👥</div>
+            <div class="qt">Friends</div>
+            <div class="qs">Invite</div>
+          </div>
+
+          <div class="qbtn" data-action="tasks" style="position:relative">
+            <div class="qicon">📋</div>
+            <div class="qt">Tasks</div>
+            <div class="qs">Daily quests</div>
+            <div class="notif">21</div>
+          </div>
+
+          <div class="qbtn" data-action="lucky">
+            <div class="qicon">🚗</div>
+            <div class="qt">Lucky Drive</div>
+            <div class="qs">Claim</div>
+          </div>
+        </div>
+
+        <div class="qcol">
+          <div class="qbtn" data-action="league">
+            <div class="qicon">🏆</div>
+            <div class="qt">Leagues</div>
+            <div class="qs" id="leagueTime">32:17:35</div>
+          </div>
+
+          <div class="qbtn" data-action="character">
+            <div class="qicon">👕</div>
+            <div class="qt">Character</div>
+            <div class="qs">Skins</div>
+          </div>
+
+          <div class="qbtn" data-action="boost">
+            <div class="qicon">⚡</div>
+            <div class="qt">Boosters</div>
+            <div class="qs">Power up</div>
+          </div>
+
+          <div class="qbtn" data-action="pk">
+            <div class="qicon">⚔️</div>
+            <div class="qt">PK Arena</div>
+            <div class="qs">Tap battle</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mascot -->
+      <div class="mascot" id="mascot">
+        <small>Replace with your LGW33 mascot PNG/WebP</small>
+      </div>
+
+      <!-- 能量条 -->
+      <div class="energy">
+        <div class="bolt">⚡</div>
+        <div class="ebody">
+          <div class="eline">
+            <span>Energy</span>
+            <em><span id="energyNum">485</span>/<span id="energyMax">500</span> · refill in <span id="refill">03:45</span></em>
+          </div>
+          <div class="bar"><div class="fill" id="energyFill"></div></div>
+        </div>
+      </div>
+
+      <!-- 底部导航 -->
+      <div class="nav" role="navigation" aria-label="bottom nav">
+        <div class="item" data-tab="clans"><span class="i">👑</span> Clans</div>
+        <div class="item" data-tab="city"><span class="i">🏙️</span> City</div>
+        <div class="item active" data-tab="home"><span class="i">🏠</span> Main</div>
+        <div class="item" data-tab="games"><span class="i">🎮</span> Games</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== 简单交互：Toast / Tab切换 / 能量条演示 / 倒计时演示 =====
+    const toast = document.getElementById("toast");
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=>toast.classList.remove("show"), 1600);
+    }
+
+    // 点击 FAQ
+    document.getElementById("faqBtn").addEventListener("click", ()=>{
+      showToast("FAQ: 这里可以放玩法说明 / 规则 / 联系方式");
+    });
+
+    // 点击 pill
+    document.querySelectorAll(".pill").forEach(p=>{
+      p.addEventListener("click", ()=>{
+        showToast("Open: " + p.dataset.action);
+      });
+    });
+
+    // 点击快捷按钮
+    document.querySelectorAll(".qbtn").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const action = b.dataset.action;
+        if(action === "daily") {
+          addToken(120);
+          consumeEnergy(12);
+          showToast("🎁 Opened chest +120 Token");
+        } else if(action === "pk") {
+          consumeEnergy(20);
+          showToast("⚔️ PK Arena (demo) — consume 20 energy");
+        } else {
+          showToast("Open: " + action);
+        }
+      });
+    });
+
+    // 底部tab切换
+    document.querySelectorAll(".nav .item").forEach(item=>{
+      item.addEventListener("click", ()=>{
+        document.querySelectorAll(".nav .item").forEach(i=>i.classList.remove("active"));
+        item.classList.add("active");
+        showToast("Tab: " + item.dataset.tab);
+      });
+    });
+
+    // Token & Energy demo data
+    const tokenNum = document.getElementById("tokenNum");
+    const energyNum = document.getElementById("energyNum");
+    const energyMax = document.getElementById("energyMax");
+    const energyFill = document.getElementById("energyFill");
+
+    function parseCommaInt(str){
+      return parseInt(String(str).replace(/,/g,''), 10) || 0;
+    }
+    function fmt(n){
+      return n.toLocaleString("en-US");
+    }
+    function refreshEnergyUI(){
+      const cur = parseInt(energyNum.textContent,10);
+      const max = parseInt(energyMax.textContent,10);
+      const pct = Math.max(0, Math.min(100, (cur/max)*100));
+      energyFill.style.width = pct.toFixed(2) + "%";
+    }
+    function addToken(amount){
+      const cur = parseCommaInt(tokenNum.textContent);
+      tokenNum.textContent = fmt(cur + amount);
+    }
+    function consumeEnergy(amount){
+      const cur = parseInt(energyNum.textContent,10);
+      const next = Math.max(0, cur - amount);
+      energyNum.textContent = String(next);
+      refreshEnergyUI();
+    }
+    refreshEnergyUI();
+
+    // League 倒计时（纯演示）
+    const leagueTimeEl = document.getElementById("leagueTime");
+    let sec = 32*3600 + 17*60 + 35;
+    setInterval(()=>{
+      sec = Math.max(0, sec - 1);
+      const h = String(Math.floor(sec/3600)).padStart(2,"0");
+      const m = String(Math.floor((sec%3600)/60)).padStart(2,"0");
+      const s = String(sec%60).padStart(2,"0");
+      leagueTimeEl.textContent = `${h}:${m}:${s}`;
+    },1000);
+
+    // Energy refill 倒计时（纯演示）
+    const refillEl = document.getElementById("refill");
+    let r = 3*60 + 45;
+    setInterval(()=>{
+      r = (r<=0) ? 5*60 : r-1; // 归零后重置为 05:00 演示循环
+      const mm = String(Math.floor(r/60)).padStart(2,"0");
+      const ss = String(r%60).padStart(2,"0");
+      refillEl.textContent = `${mm}:${ss}`;
+    },1000);
+
+    // 点击 Mascot：以后可以做换装/升级
+    document.getElementById("mascot").addEventListener("click", ()=>{
+      showToast("👤 Character: skins / level / stats (demo)");
+    });
+  </script>
+</body>
+</html>
