@@ -23,6 +23,7 @@ INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "change_me")
 DEFAULT_BALANCE = int(os.getenv("DEFAULT_BALANCE", "1000"))
 DEFAULT_CHAT_ID = int(os.getenv("DEFAULT_CHAT_ID", "0"))  # 默认游戏群组ID
 API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+MINIAPP_URL = os.getenv("MINIAPP_URL", "http://127.0.0.1:8000")
 
 # Webhook 配置
 WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"
@@ -363,7 +364,8 @@ async def share_room(room_id: str, body: ShareRoomIn):
         bot_token=BOT_TOKEN,
         chat_id=chat_id,
         text=text,
-        invite_token=room["invite_token"]
+        invite_token=room["invite_token"],
+        miniapp_url=MINIAPP_URL
     )
 
     # 记录 chat_id（方便后续播报）
@@ -388,6 +390,53 @@ def get_room(room_id: str):
         raise HTTPException(404, "Room not found")
 
     return dict(room)
+
+@app.get("/api/rooms/open/list")
+def get_open_rooms():
+    """获取所有开放状态的房间列表"""
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # 查询所有OPEN和FULL状态的房间,按创建时间倒序
+    cur.execute("""
+        SELECT room_id, host_id, host_username, guest_id, guest_username,
+               bet_amount, status, created_at, expires_at
+        FROM rooms
+        WHERE status IN ('OPEN', 'FULL')
+        AND datetime(expires_at) > datetime('now')
+        ORDER BY created_at DESC
+        LIMIT 50
+    """)
+
+    rooms = cur.fetchall()
+    conn.close()
+
+    # 转换为字典列表
+    room_list = [dict(room) for room in rooms]
+
+    return {"rooms": room_list, "count": len(room_list)}
+
+@app.get("/api/users/{user_id}/rooms")
+def get_user_rooms(user_id: int):
+    """获取用户当前参与的房间"""
+    conn = get_conn()
+    cur = conn.cursor()
+
+    # 查询用户作为房主或客人的所有未结束房间
+    cur.execute("""
+        SELECT * FROM rooms
+        WHERE (host_id=? OR guest_id=?)
+        AND status NOT IN ('FINISHED', 'CANCELLED')
+        ORDER BY created_at DESC
+    """, (user_id, user_id))
+
+    rooms = cur.fetchall()
+    conn.close()
+
+    # 转换为字典列表
+    room_list = [dict(room) for room in rooms]
+
+    return {"rooms": room_list, "count": len(room_list)}
 
 @app.post("/api/rooms/{room_id}/ready")
 def ready_room(room_id: str, body: ReadyIn):

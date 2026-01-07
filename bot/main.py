@@ -107,14 +107,28 @@ async def on_join(callback: CallbackQuery):
     username = user.username or (user.full_name if user.full_name else None)
 
     try:
+        # 调用API加入房间
         res = await join_room_as_user(invite_token, user.id, username)
+        room_id = res['room_id']
+
         await callback.answer("加入成功 ✅", show_alert=False)
 
-        # MVP：先简单回个群消息，表示已经占位加入
+        # 生成带房间参数的MiniApp链接
+        miniapp_url_with_room = f"{MINIAPP_URL}?room_id={room_id}"
+
+        # 创建带MiniApp按钮的回复
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="🎮 进入房间开始游戏",
+                web_app=WebAppInfo(url=miniapp_url_with_room)
+            )]
+        ])
+
         await callback.message.reply(
             f"✅ @{user.username or user.full_name} 已加入挑战！\n"
-            f"房间：{res['room_id']} | 押注：{res['bet_amount']} LGW33\n"
-            f"下一步：在 Mini App 里进入房间 → Ready → 开始"
+            f"房间：{res['room_id']} | 押注：{res['bet_amount']} LGW33\n\n"
+            f"👇 点击下方按钮直接进入房间",
+            reply_markup=keyboard
         )
     except Exception as e:
         await callback.answer("加入失败 ❌（余额不足/房间已满/已过期）", show_alert=True)
