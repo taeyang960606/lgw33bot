@@ -360,13 +360,19 @@ async def share_room(room_id: str, body: ShareRoomIn):
         f"👇 点下面按钮加入房间挑战"
     )
 
-    await send_invite_message(
-        bot_token=BOT_TOKEN,
-        chat_id=chat_id,
-        text=text,
-        invite_token=room["invite_token"],
-        miniapp_url=MINIAPP_URL
-    )
+    try:
+        print(f"[DEBUG] Sending invite message to chat_id={chat_id}, miniapp_url={MINIAPP_URL}")
+        await send_invite_message(
+            bot_token=BOT_TOKEN,
+            chat_id=chat_id,
+            text=text,
+            invite_token=room["invite_token"],
+            miniapp_url=MINIAPP_URL
+        )
+        print(f"[DEBUG] Invite message sent successfully")
+    except Exception as e:
+        print(f"[ERROR] Failed to send invite message: {e}")
+        raise HTTPException(500, f"Failed to send invite message: {str(e)}")
 
     # 记录 chat_id（方便后续播报）
     conn = get_conn()
