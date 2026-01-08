@@ -32,12 +32,13 @@ def init_db() -> None:
       guest_id INTEGER,
       guest_username TEXT,
       bet_amount INTEGER NOT NULL,
-      status TEXT NOT NULL, -- OPEN, FULL, READY, PLAYING, FINISHED, CANCELLED
+      status TEXT NOT NULL, -- OPEN, FULL, COUNTDOWN, PLAYING, FINISHED, CANCELLED
       invite_token TEXT NOT NULL,
       host_ready INTEGER NOT NULL DEFAULT 0,
       guest_ready INTEGER NOT NULL DEFAULT 0,
       host_clicks INTEGER NOT NULL DEFAULT 0,
       guest_clicks INTEGER NOT NULL DEFAULT 0,
+      countdown_start_time TEXT,
       game_start_time TEXT,
       game_end_time TEXT,
       winner_id INTEGER,
@@ -45,6 +46,12 @@ def init_db() -> None:
       expires_at TEXT NOT NULL
     );
     """)
+
+    # 添加 countdown_start_time 列（如果不存在）
+    try:
+        cur.execute("ALTER TABLE rooms ADD COLUMN countdown_start_time TEXT")
+    except sqlite3.OperationalError:
+        pass  # 列已存在
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS ledger (

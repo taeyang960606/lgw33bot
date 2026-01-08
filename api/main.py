@@ -524,17 +524,54 @@ def ready_room(room_id: str, body: ReadyIn):
     both_ready = ready_status["host_ready"] == 1 and ready_status["guest_ready"] == 1
 
     if both_ready:
-        # 双方都Ready，开始游戏
-        game_start_time = datetime.utcnow().isoformat()
+        # 双方都Ready，进入倒计时状态（3秒后开始游戏）
+        countdown_start_time = datetime.utcnow().isoformat()
         cur.execute(
-            "UPDATE rooms SET status='PLAYING', game_start_time=? WHERE room_id=?",
-            (game_start_time, room_id)
+            "UPDATE rooms SET status='COUNTDOWN', countdown_start_time=? WHERE room_id=?",
+            (countdown_start_time, room_id)
         )
         conn.commit()
 
     conn.close()
 
     return {"ok": True, "both_ready": both_ready}
+
+
+@app.post("/api/rooms/{room_id}/start")
+def start_game(room_id: str, body: ReadyIn):
+    """倒计时结束后开始游戏（前端触发）"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM rooms WHERE room_id=?", (room_id,))
+    room = cur.fetchone()
+
+    if not room:
+        conn.close()
+        raise HTTPException(404, "Room not found")
+
+    # 只有 COUNTDOWN 状态才能开始
+    if room["status"] != "COUNTDOWN":
+        conn.close()
+        raise HTTPException(400, f"Room is not in countdown (status: {room['status']})")
+
+    # 验证倒计时是否已过3秒
+    if room["countdown_start_time"]:
+        countdown_start = datetime.fromisoformat(room["countdown_start_time"])
+        elapsed = (datetime.utcnow() - countdown_start).total_seconds()
+        if elapsed < 2.5:  # 留0.5秒容差
+            conn.close()
+            raise HTTPException(400, f"Countdown not finished ({3-int(elapsed)}s remaining)")
+
+    # 开始游戏
+    game_start_time = datetime.utcnow().isoformat()
+    cur.execute(
+        "UPDATE rooms SET status='PLAYING', game_start_time=? WHERE room_id=?",
+        (game_start_time, room_id)
+    )
+    conn.commit()
+    conn.close()
+
+    return {"ok": True, "game_start_time": game_start_time}
 
 @app.post("/api/rooms/{room_id}/click")
 def click_room(room_id: str, body: ClickIn):

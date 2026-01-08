@@ -317,9 +317,86 @@
     .nav .i{ font-size: 14px; }
     /* 隐藏元素 */
     .hidden{ display: none !important; }
+
+    /* ========== 全屏倒计时 ========== */
+    .countdown-overlay{
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.9);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 20px;
+    }
+    .countdown-number{
+      font-size: clamp(120px, 35vw, 200px);
+      font-weight: 900; color: var(--accent-yellow);
+      text-shadow: 0 0 60px rgba(255,193,7,0.8), 0 0 120px rgba(255,193,7,0.4);
+      animation: countdownPop 0.5s ease-out;
+    }
+    .countdown-text{
+      font-size: 24px; font-weight: 700; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 4px;
+    }
+    .countdown-go{
+      font-size: clamp(80px, 25vw, 140px);
+      font-weight: 900; color: var(--accent-green);
+      text-shadow: 0 0 60px rgba(76,175,80,0.8), 0 0 120px rgba(76,175,80,0.4);
+      animation: countdownPop 0.4s ease-out;
+    }
+    @keyframes countdownPop{
+      0%{ transform: scale(0.3); opacity: 0; }
+      50%{ transform: scale(1.2); }
+      100%{ transform: scale(1); opacity: 1; }
+    }
+
+    /* ========== 粒子Canvas ========== */
+    #particleCanvas{
+      position: fixed; inset: 0; z-index: 50;
+      pointer-events: none;
+    }
+
+    /* ========== 胜负结果特效 ========== */
+    .result-overlay{
+      position: fixed; inset: 0; z-index: 9998;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      animation: resultFadeIn 0.5s ease-out;
+    }
+    .result-overlay.win{ background: radial-gradient(circle, rgba(255,193,7,0.3) 0%, rgba(0,0,0,0.95) 70%); }
+    .result-overlay.lose{ background: radial-gradient(circle, rgba(244,67,54,0.2) 0%, rgba(0,0,0,0.95) 70%); }
+    .result-overlay.draw{ background: radial-gradient(circle, rgba(33,150,243,0.2) 0%, rgba(0,0,0,0.95) 70%); }
+    .result-big-emoji{
+      font-size: clamp(100px, 30vw, 160px);
+      animation: resultBounce 0.6s ease-out;
+    }
+    .result-big-text{
+      font-size: clamp(36px, 10vw, 56px);
+      font-weight: 900; margin-top: 20px;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .result-overlay.win .result-big-text{ color: var(--accent-yellow); }
+    .result-overlay.lose .result-big-text{ color: var(--accent-red); }
+    .result-overlay.draw .result-big-text{ color: var(--accent-blue); }
+    .result-amount{
+      font-size: 24px; font-weight: 700; margin-top: 16px;
+      color: var(--text-secondary);
+    }
+    @keyframes resultFadeIn{ 0%{ opacity: 0; } 100%{ opacity: 1; } }
+    @keyframes resultBounce{
+      0%{ transform: scale(0) rotate(-20deg); }
+      50%{ transform: scale(1.2) rotate(10deg); }
+      70%{ transform: scale(0.9) rotate(-5deg); }
+      100%{ transform: scale(1) rotate(0deg); }
+    }
   </style>
 </head>
 <body>
+  <!-- 粒子特效Canvas -->
+  <canvas id="particleCanvas"></canvas>
+  <!-- 倒计时覆盖层 -->
+  <div class="countdown-overlay hidden" id="countdownOverlay">
+    <div class="countdown-text">准备开始</div>
+    <div class="countdown-number" id="countdownNumber">3</div>
+  </div>
+
   <div class="safe">
     <!-- 顶部栏 -->
     <div class="topbar">
@@ -456,6 +533,152 @@
   let currentRoom = null;
   let pollInterval = null;
   let lastClickCount = 0;
+  let countdownShown = false;  // 防止重复显示倒计时
+  let resultShown = false;     // 防止重复显示结果特效
+
+  // ==================== 粒子系统 ====================
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  class Particle {
+    constructor(x, y, color) {
+      this.x = x;
+      this.y = y;
+      this.color = color;
+      this.size = Math.random() * 8 + 4;
+      this.speedX = (Math.random() - 0.5) * 16;
+      this.speedY = (Math.random() - 0.5) * 16;
+      this.gravity = 0.3;
+      this.life = 1;
+      this.decay = Math.random() * 0.02 + 0.015;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      this.speedY += this.gravity;
+      this.speedX *= 0.98;
+      this.life -= this.decay;
+      this.size *= 0.97;
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.life;
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function spawnParticles(x, y, count = 12, colors = ['#FFC107', '#FF9800', '#FFEB3B']) {
+    for (let i = 0; i < count; i++) {
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      particles.push(new Particle(x, y, color));
+    }
+  }
+
+  function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animateParticles);
+  }
+  animateParticles();
+
+  // ==================== 倒计时动画 ====================
+  async function showCountdown() {
+    if (countdownShown) return;
+    countdownShown = true;
+
+    const overlay = document.getElementById('countdownOverlay');
+    const numberEl = document.getElementById('countdownNumber');
+
+    // 震动反馈
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+    overlay.classList.remove('hidden');
+
+    // 3 - 2 - 1 - GO!
+    for (let i = 3; i >= 1; i--) {
+      numberEl.textContent = i;
+      numberEl.className = 'countdown-number';
+      void numberEl.offsetWidth; // 触发重绘
+      numberEl.style.animation = 'none';
+      void numberEl.offsetWidth;
+      numberEl.style.animation = 'countdownPop 0.5s ease-out';
+      if (navigator.vibrate) navigator.vibrate(50);
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    // GO!
+    numberEl.textContent = 'GO!';
+    numberEl.className = 'countdown-go';
+    numberEl.style.animation = 'none';
+    void numberEl.offsetWidth;
+    numberEl.style.animation = 'countdownPop 0.4s ease-out';
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
+
+    // 触发后端开始游戏
+    try {
+      const u = getUser();
+      await fetch(`${API}/api/rooms/${currentRoomId}/start`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ user: u })
+      });
+    } catch (e) { console.error("开始游戏失败:", e); }
+
+    await new Promise(r => setTimeout(r, 600));
+    overlay.classList.add('hidden');
+  }
+
+  // ==================== 结果特效 ====================
+  function showResultEffect(result, amount) {
+    if (resultShown) return;
+    resultShown = true;
+
+    const overlay = document.createElement('div');
+    overlay.className = `result-overlay ${result}`;
+    overlay.id = 'resultOverlay';
+
+    const emoji = result === 'win' ? '🎉' : result === 'lose' ? '😢' : '🤝';
+    const text = result === 'win' ? '你赢了！' : result === 'lose' ? '你输了' : '平局！';
+    const amountText = result === 'win' ? `+${amount * 2} LGW33` :
+                       result === 'lose' ? `-${amount} LGW33` : '退回押注';
+
+    overlay.innerHTML = `
+      <div class="result-big-emoji">${emoji}</div>
+      <div class="result-big-text">${text}</div>
+      <div class="result-amount">${amountText}</div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // 胜利时放烟花
+    if (result === 'win') {
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight * 0.6;
+          spawnParticles(x, y, 30, ['#FFC107', '#FF9800', '#4CAF50', '#FFEB3B', '#E91E63']);
+        }, i * 200);
+      }
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+    }
+
+    // 3秒后关闭
+    setTimeout(() => {
+      overlay.remove();
+    }, 3000);
+  }
 
   // ==================== Telegram WebApp ====================
   if (window.Telegram?.WebApp) {
@@ -572,6 +795,14 @@
         document.getElementById("readyBtn").textContent = myReady ? "已准备 ✅" : "准备开始";
         document.getElementById("p1Status").textContent = hostReady ? "Ready" : "等待";
         document.getElementById("p2Status").textContent = guestReady ? "Ready" : "等待";
+      } else if (currentRoom.status === 'COUNTDOWN') {
+        // 倒计时状态 - 显示 3-2-1 动画
+        hide('readySection'); hide('tapZone'); hide('resultSection'); show('readyStatusDisplay');
+        document.getElementById("readyStatusText").textContent = "双方已准备，即将开始...";
+        document.getElementById("p1Status").textContent = "Ready";
+        document.getElementById("p2Status").textContent = "Ready";
+        // 触发倒计时动画（只触发一次）
+        showCountdown();
       } else if (currentRoom.status === 'PLAYING') {
         hide('readySection'); hide('readyStatusDisplay'); show('tapZone'); hide('resultSection');
         const myClicks = isHost ? currentRoom.host_clicks : currentRoom.guest_clicks;
@@ -598,6 +829,13 @@
         const winnerId = currentRoom.winner_id;
         const myClicks = isHost ? currentRoom.host_clicks : currentRoom.guest_clicks;
         const opponentClicks = isHost ? currentRoom.guest_clicks : currentRoom.host_clicks;
+
+        // 显示结果特效（只显示一次）
+        let resultType = 'draw';
+        if (winnerId === u.user_id) resultType = 'win';
+        else if (winnerId !== null) resultType = 'lose';
+        showResultEffect(resultType, currentRoom.bet_amount);
+
         if (winnerId === null) {
           document.getElementById("resultEmoji").textContent = "🤝";
           document.getElementById("resultText").textContent = "平局！";
@@ -646,14 +884,21 @@
     // 震动反馈（如果支持）
     if (navigator.vibrate) navigator.vibrate(10);
 
+    // 获取点击位置（屏幕坐标）
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    // 粒子爆炸效果
+    spawnParticles(clientX, clientY, 8, ['#FFC107', '#FF9800', '#FFEB3B']);
+
     // 浮动分数动画
     const tapZone = document.getElementById("tapZone");
     const floatScore = document.createElement("div");
     floatScore.className = "float-score";
     floatScore.textContent = "+1";
     const rect = tapZone.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     floatScore.style.left = x + "px";
     floatScore.style.top = y + "px";
     tapZone.appendChild(floatScore);
@@ -685,11 +930,16 @@
     currentRoomId = null;
     currentRoom = null;
     lastClickCount = 0;
+    countdownShown = false;  // 重置倒计时状态
+    resultShown = false;     // 重置结果特效状态
+    // 移除可能存在的结果覆盖层
+    document.getElementById('resultOverlay')?.remove();
     if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-    hide('gameSection'); show('createSection'); show('joinSection'); show('roomListSection');
+    hide('gameSection'); show('createSection'); show('joinSection'); show('roomListSection'); show('myRoomsSection');
     document.getElementById("bet").value = "";
     document.getElementById("join_room_id").value = "";
     hide('roomInfo');
+    loadMyRooms();
     loadOpenRooms();
   }
 
@@ -709,7 +959,7 @@
         const statusText = {
           'OPEN': '等待加入',
           'FULL': '等待准备',
-          'READY': '准备中',
+          'COUNTDOWN': '倒计时',
           'PLAYING': '游戏中'
         }[room.status] || room.status;
         return `
