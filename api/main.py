@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .db import init_db, get_conn
@@ -703,8 +704,6 @@ def root():
     """根路径重定向到 Mini App"""
     return RedirectResponse(url="/miniapp/index.html")
 
-@app.get("/miniapp/index.html")
-def miniapp_index():
-    # MVP：直接把本地 miniapp/index.html 作为静态文件输出
-    path = os.path.join(os.path.dirname(__file__), "..", "miniapp", "index.html")
-    return FileResponse(path)
+# 挂载整个 miniapp 目录为静态文件
+miniapp_path = os.path.join(os.path.dirname(__file__), "..", "miniapp")
+app.mount("/miniapp", StaticFiles(directory=miniapp_path, html=True), name="miniapp")
