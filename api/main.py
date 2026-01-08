@@ -417,10 +417,10 @@ def get_open_rooms():
     rooms = cur.fetchall()
     conn.close()
 
-    # 转换为字典列表
+    # 转换为字典列表，直接返回数组
     room_list = [dict(room) for room in rooms]
 
-    return {"rooms": room_list, "count": len(room_list)}
+    return room_list
 
 @app.get("/api/users/{user_id}/rooms")
 def get_user_rooms(user_id: int):
