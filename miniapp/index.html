@@ -170,6 +170,34 @@
       align-items: center;
       justify-content: center;
     }
+    /* 左右侧边图标 */
+    .side-icon{
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+      z-index: 10;
+    }
+    .side-icon:active{ transform: scale(0.95); }
+    .side-icon.left{
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .side-icon.left:active{ transform: translateY(-50%) scale(0.95); }
+    .side-icon.right{
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .side-icon.right:active{ transform: translateY(-50%) scale(0.95); }
+    .side-icon img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
     /* 中央吉祥物 */
     .mascot{
       margin: 0 auto;
@@ -346,9 +374,19 @@
 
     <!-- 主舞台 -->
     <section class="stage">
+      <!-- 左侧：邀请好友 -->
+      <div class="side-icon left" id="inviteFriendsIcon">
+        <img src="image/invite_friends.webp" alt="邀请好友">
+      </div>
+
       <!-- 中央吉祥物 -->
       <div class="mascot has-image" id="mascot">
         <img src="image/吉祥物.webp" alt="LGW33 吉祥物" class="mascot-image" id="mascotImage">
+      </div>
+
+      <!-- 右侧：排行榜 -->
+      <div class="side-icon right" id="leaderboardIcon">
+        <img src="image/leaderboard.webp" alt="排行榜">
       </div>
 
       <!-- 底部导航 -->
