@@ -253,6 +253,39 @@
       0%, 100%{ opacity: 0.5; }
       50%{ opacity: 1; }
     }
+    /* 全屏Loading层 */
+    .loading-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease-out;
+    }
+    .loading-overlay.hidden{
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loading-spinner{
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255,193,7,0.2);
+      border-top-color: var(--accent-yellow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin{
+      to{ transform: rotate(360deg); }
+    }
+    .loading-text{
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
     /* 响应式设计 */
     @media (max-width: 375px){
       .mascot{ width: 200px; }
@@ -264,6 +297,12 @@
   </style>
 </head>
 <body>
+  <!-- 全屏Loading层 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">加载中...</div>
+  </div>
+
   <div class="safe">
     <!-- 顶部栏 -->
     <div class="topbar">
@@ -416,17 +455,53 @@
     };
   }
 
+  // ==================== 图片预加载 + 隐藏Loading层 ====================
+  function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      // 动画结束后移除DOM节省资源
+      setTimeout(() => overlay.remove(), 300);
+    }
+  }
+
+  function preloadImages(urls) {
+    // 返回Promise，等待所有图片加载完成（成功或失败都算完成）
+    return Promise.all(urls.map(url => {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve; // 失败也继续，不阻塞
+        img.src = url;
+      });
+    }));
+  }
+
   // ==================== 初始化 ====================
   document.addEventListener('DOMContentLoaded', async () => {
-    // 加载余额
-    await loadBalance();
-
     // 检查URL参数，如果有room_id则跳转到PK页面
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('room_id');
     if (roomId) {
       window.location.href = `pk.html?room_id=${roomId}`;
+      return; // 跳转时不隐藏loading
     }
+
+    // 预加载首屏关键图片
+    const imagesToPreload = [
+      'image/logo.png',
+      'image/token.png',
+      'image/吉祥物.png'
+    ];
+
+    // 并行：预加载图片 + 加载余额
+    await Promise.all([
+      preloadImages(imagesToPreload),
+      loadBalance()
+    ]);
+
+    // 所有资源加载完成，隐藏Loading层
+    hideLoading();
   });
 </script>
 </body>
