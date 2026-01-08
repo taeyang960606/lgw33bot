@@ -484,7 +484,7 @@
     const roomId = urlParams.get('room_id');
     if (roomId) {
       window.location.href = `pk.html?room_id=${roomId}`;
-      return; // 跳转时不隐藏loading
+      return;
     }
 
     // 预加载首屏关键图片
@@ -494,13 +494,23 @@
       'image/吉祥物.png'
     ];
 
-    // 并行：预加载图片 + 加载余额
-    await Promise.all([
-      preloadImages(imagesToPreload),
-      loadBalance()
-    ]);
+    // 超时保护：最多等3秒
+    const timeout = new Promise(resolve => setTimeout(resolve, 3000));
 
-    // 所有资源加载完成，隐藏Loading层
+    try {
+      // 并行：预加载图片 + 加载余额，但最多等3秒
+      await Promise.race([
+        Promise.all([
+          preloadImages(imagesToPreload),
+          loadBalance()
+        ]),
+        timeout
+      ]);
+    } catch (e) {
+      console.error('加载出错:', e);
+    }
+
+    // 无论成功失败都隐藏Loading层
     hideLoading();
   });
 </script>
