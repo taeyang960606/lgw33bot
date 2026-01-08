@@ -9,9 +9,9 @@ async def send_invite_message(
     """发送房间邀请消息到群聊"""
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-    # 构建按钮 - 只使用callback_data,不使用web_app(群组不支持)
+    # 构建按钮 - 使用URL按钮跳转到机器人
     buttons = [
-        [{"text": "加入房间挑战", "callback_data": f"join:{invite_token}"}]
+        [{"text": "🎮 前往机器人查看房间", "url": "https://t.me/lgw33tokenbot"}]
     ]
 
     payload = {

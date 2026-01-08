@@ -49,7 +49,7 @@
     .topbar{
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       padding: 8px 0;
     }
     .balance-card{
@@ -450,7 +450,6 @@
           <div class="balance-amount" id="balance">--</div>
         </div>
       </div>
-      <a href="index.html" class="back-btn">← 首页</a>
     </div>
 
     <!-- Debug区域 -->
@@ -467,15 +466,8 @@
     <div class="card" id="createSection">
       <div class="card-title">🎮 创建新房间</div>
       <input class="input" id="bet" placeholder="押注金额 (1-100000 LGW33)" type="number" />
-      <button class="btn btn-primary" onclick="createRoom()">创建房间并邀请对手</button>
+      <button class="btn btn-primary" onclick="createRoom()">创建房间</button>
       <div class="info-text hidden" id="roomInfo"></div>
-    </div>
-
-    <!-- 加入房间区域 -->
-    <div class="card" id="joinSection">
-      <div class="card-title">🚪 加入房间</div>
-      <input class="input" id="join_room_id" placeholder="输入房间ID" />
-      <button class="btn btn-secondary" onclick="enterRoom()">进入房间</button>
     </div>
 
     <!-- 我的房间列表 -->
@@ -775,7 +767,7 @@
       const roomInfoEl = document.getElementById("roomInfo");
       roomInfoEl.innerHTML = `✅ 房间创建成功！<br>房间ID: <strong>${data.room_id}</strong><br>押注: <strong>${data.bet_amount} LGW33</strong>`;
       show('roomInfo');
-      await shareRoom();
+      await shareRoom(); // 发送挑战信息到群组
       await enterRoom(data.room_id);
       await checkBalance();
     } catch (e) { alert("创建房间失败: " + e.message); }
@@ -791,17 +783,17 @@
         body: JSON.stringify({ user: u })
       });
       if (r.ok && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("邀请已发送到游戏群！");
+        window.Telegram.WebApp.showAlert("挑战已发送到游戏群！其他玩家可通过机器人加入房间。");
       }
     } catch (e) { console.error("分享失败:", e); }
   }
 
   // ==================== 进入房间 ====================
   async function enterRoom(roomId) {
-    const room_id = roomId || currentRoomId || document.getElementById("join_room_id")?.value.trim();
+    const room_id = roomId || currentRoomId;
     if (!room_id) { alert("请输入房间ID"); return; }
     currentRoomId = room_id;
-    hide('createSection'); hide('joinSection'); hide('roomListSection');
+    hide('createSection'); hide('roomListSection');
     show('gameSection');
     await updateRoomStatus();
     if (pollInterval) clearInterval(pollInterval);
@@ -976,7 +968,7 @@
     // 移除可能存在的结果覆盖层
     document.getElementById('resultOverlay')?.remove();
     if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-    hide('gameSection'); show('createSection'); show('joinSection'); show('roomListSection'); show('myRoomsSection');
+    hide('gameSection'); show('createSection'); show('roomListSection'); show('myRoomsSection');
     document.getElementById("bet").value = "";
     document.getElementById("join_room_id").value = "";
     hide('roomInfo');
