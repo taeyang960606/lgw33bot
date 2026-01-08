@@ -444,6 +444,50 @@ def get_user_rooms(user_id: int):
 
     return {"rooms": room_list, "count": len(room_list)}
 
+class JoinRoomByIdIn(BaseModel):
+    user: DebugUser
+
+@app.post("/api/rooms/{room_id}/join")
+def join_room_by_id(room_id: str, body: JoinRoomByIdIn):
+    """用户通过房间ID加入房间（MiniApp使用）"""
+    upsert_user(body.user.user_id, body.user.username)
+
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM rooms WHERE room_id=?", (room_id,))
+    room = cur.fetchone()
+    if not room:
+        conn.close()
+        raise HTTPException(404, "Room not found")
+
+    if room["status"] != "OPEN":
+        conn.close()
+        raise HTTPException(400, "Room not open")
+
+    if room["host_id"] == body.user.user_id:
+        conn.close()
+        raise HTTPException(400, "Host cannot join own room")
+
+    # 冻结挑战者押注
+    freeze(body.user.user_id, room["bet_amount"], ref=f"room:{room_id}")
+
+    # 加入房间，更新过期时间为2分钟后
+    new_expires_at = datetime.utcnow() + timedelta(minutes=2)
+    cur.execute(
+        "UPDATE rooms SET guest_id=?, guest_username=?, status='FULL', expires_at=? WHERE room_id=?",
+        (body.user.user_id, body.user.username, new_expires_at.isoformat(), room_id)
+    )
+    conn.commit()
+    conn.close()
+
+    return {
+        "ok": True,
+        "room_id": room_id,
+        "bet_amount": room["bet_amount"],
+        "host_id": room["host_id"],
+        "guest_id": body.user.user_id
+    }
+
 @app.post("/api/rooms/{room_id}/ready")
 def ready_room(room_id: str, body: ReadyIn):
     """玩家点击Ready"""
