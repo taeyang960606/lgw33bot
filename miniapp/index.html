@@ -40,6 +40,10 @@
       margin: 0 auto;
       position: relative;
       min-height: 100vh;
+      /* flex布局让stage自适应填充 */
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 90px; /* 给导航栏留空间 */
     }
     /* 顶部栏 */
     .topbar{
@@ -160,13 +164,18 @@
     .stage{
       margin-top: 12px;
       position: relative;
-      padding: 16px 14px 20px 14px;
+      padding: 16px 14px 0 14px;
+      flex: 1; /* 填充剩余空间 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     /* 中央吉祥物 */
     .mascot{
       margin: 0 auto;
       width: 100%;
       max-width: 520px;
+      max-height: 100%; /* 限制最大高度 */
       aspect-ratio: 3/4;
       display: grid;
       place-items: center;
