@@ -494,23 +494,17 @@
       'image/吉祥物.png'
     ];
 
-    // 超时保护：最多等3秒
-    const timeout = new Promise(resolve => setTimeout(resolve, 3000));
-
+    // 并行：预加载图片 + 加载余额
     try {
-      // 并行：预加载图片 + 加载余额，但最多等3秒
-      await Promise.race([
-        Promise.all([
-          preloadImages(imagesToPreload),
-          loadBalance()
-        ]),
-        timeout
+      await Promise.all([
+        preloadImages(imagesToPreload),
+        loadBalance()
       ]);
     } catch (e) {
       console.error('加载出错:', e);
     }
 
-    // 无论成功失败都隐藏Loading层
+    // 加载完成，隐藏Loading层
     hideLoading();
   });
 </script>
