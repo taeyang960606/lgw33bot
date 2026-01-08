@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>LGW33 - 首页</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root{
+      /* 黑色到黄色渐变主题 */
+      --bg-primary: #000000;
+      --bg-gradient-start: #000000;
+      --bg-gradient-end: #FFC107;
+
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(255, 193, 7, 0.3);
+
+      --accent-blue: #2196F3;
+      --accent-blue-light: #64B5F6;
+      --accent-yellow: #FFC107;
+      --accent-orange: #FF9800;
+
+      --text-primary: #FFFFFF;
+      --text-secondary: #E0E0E0;
+      --text-muted: #BDBDBD;
+
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+      color: var(--text-primary);
+      background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      min-height: 100vh;
+    }
+
+    /* 安全区域容器 */
+    .safe{
+      padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom) 14px;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* 顶部栏 - 参考template1 */
+    .topbar{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 2px 8px 2px;
+      gap: 12px;
+      position: relative;
+    }
+
+    /* 左侧用户信息 */
+    .user{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .avatar{
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(33,150,243,0.2), rgba(33,150,243,0.1));
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-sm);
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .avatar::after{
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent 60%);
+      transform: rotate(18deg);
+    }
+
+    .avatar span{
+      position: relative;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      font-size: 14px;
+      color: var(--accent-blue);
+    }
+
+    .namewrap{
+      min-width: 0;
+    }
+
+    .name{
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-primary);
+    }
+
+    .sub{
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    /* 中间品牌Logo - 绝对居中 */
+    .brandTitle{
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .brandTitle .logo{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 36px;
+      pointer-events: auto;
+    }
+
+    .brandTitle .logo img{
+      height: 100%;
+      width: auto;
+      display: block;
+      vertical-align: middle;
+    }
+
+
+
+    /* Token数字区域 - 参考template1的hero */
+    .hero{
+      margin-top: 6px;
+      padding: 10px 0 0;
+    }
+
+    .tokenRow{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .coin{
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .coin img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .token{
+      font-size: 42px;
+      font-weight: 1000;
+      letter-spacing: 0.5px;
+      line-height: 1;
+      color: var(--text-primary);
+      text-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+
+
+    /* 主舞台 - 移除所有边框和背景 */
+    .stage{
+      margin-top: 12px;
+      position: relative;
+      padding: 16px 14px 70px 14px;
+    }
+
+    /* 中央吉祥物 - 移除所有边框和背景 */
+    .mascot{
+      margin: 10px auto 0;
+      width: 240px;
+      aspect-ratio: 3/4;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .mascot::before{
+      content: "LGW33\nMASCOT";
+      white-space: pre;
+      text-align: center;
+      font-weight: 1000;
+      letter-spacing: 1px;
+      line-height: 1.15;
+      font-size: 20px;
+      color: var(--text-primary);
+    }
+
+    .mascot small{
+      position: absolute;
+      bottom: 14px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    /* 实际美术资源样式 */
+    .mascot-image{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+    }
+
+    /* 当有图片时隐藏占位文字 */
+    .mascot.has-image::before{
+      display: none;
+    }
+
+    .mascot.has-image small{
+      display: none;
+    }
+
+
+
+    /* 底部导航 - 黄色背景，白色文字 */
+    .nav{
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 0px;
+      height: 54px;
+      border-radius: 18px;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: var(--accent-yellow);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      box-shadow: var(--shadow-md);
+    }
+
+    .nav .item{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav .item.active{
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(0,0,0,0.1);
+      color: #FFFFFF;
+    }
+
+    .nav .item:hover{
+      background: rgba(0,0,0,0.1);
+    }
+
+    .nav .i{
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 375px) {
+      .mascot{
+        width: 200px;
+      }
+      .token{
+        font-size: 36px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .mascot{
+        width: 280px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="safe">
+    <!-- 顶部栏 - 严格参考template1布局 -->
+    <div class="topbar">
+      <!-- 左侧：用户信息 -->
+      <div class="user">
+        <div class="avatar"><span>LG</span></div>
+        <div class="namewrap">
+          <div class="name" id="userName">玩家</div>
+          <div class="sub">
+            <span>在线</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 中间：品牌Logo -->
+      <div class="brandTitle">
+        <span class="logo">
+          <img src="../image/logo.png" alt="LGW33">
+        </span>
+      </div>
+    </div>
+
+    <!-- Token数字区域 - 参考template1的hero -->
+    <section class="hero">
+      <div class="tokenRow">
+        <div class="coin" aria-hidden="true">
+          <img src="../image/token.png" alt="Token">
+        </div>
+        <div class="token" id="tokenNum">75,187</div>
+      </div>
+    </section>
+
+    <!-- 主舞台 -->
+    <section class="stage">
+      <!-- 中央吉祥物 -->
+      <div class="mascot has-image" id="mascot">
+        <img src="../image/吉祥物.png" alt="LGW33 吉祥物" class="mascot-image" id="mascotImage">
+      </div>
+
+      <!-- 底部导航 - 紧凑小尺寸，只保留2个选项 -->
+      <div class="nav" role="navigation" aria-label="bottom nav">
+        <a href="#" class="item active" data-tab="home">
+          <span class="i">🏠</span> Home
+        </a>
+        <a href="pk_1win_style.html" class="item" data-tab="games">
+          <span class="i">🎮</span> PK
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ==================== Telegram WebApp 初始化 ====================
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+
+      // 获取用户信息
+      const user = tg.initDataUnsafe?.user;
+      if (user) {
+        const userName = user.first_name || user.username || '玩家';
+        document.getElementById('userName').textContent = userName;
+      }
+    }
+
+    // ==================== 导航交互 ====================
+    document.querySelectorAll('.nav .item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        // Telegram触觉反馈
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+        }
+
+        // 更新激活状态
+        document.querySelectorAll('.nav .item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+
+    // ==================== 吉祥物点击交互 ====================
+    document.getElementById('mascot')?.addEventListener('click', () => {
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+      }
+    });
+
+    // ==================== 美术资源加载逻辑 ====================
+    const mascotImage = document.getElementById('mascotImage');
+    const mascot = document.getElementById('mascot');
+
+    if (mascotImage) {
+      mascotImage.onerror = function() {
+        console.warn('吉祥物图片加载失败，显示占位符');
+        mascot.classList.remove('has-image');
+        mascot.innerHTML = '<small>图片加载失败</small>';
+      };
+    }
+
+    // ==================== Token数据管理 ====================
+    // 实际项目中应该从后端API获取
+    function updateToken(amount) {
+      const tokenEl = document.getElementById('tokenNum');
+      tokenEl.textContent = amount.toLocaleString('zh-CN');
+    }
+
+    // 示例：从localStorage读取积分
+    const savedBalance = localStorage.getItem('lgw33_balance');
+    if (savedBalance) {
+      updateToken(parseInt(savedBalance));
+    }
+  </script>
+</body>
+</html>
+
