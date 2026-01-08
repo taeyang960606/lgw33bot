@@ -356,6 +356,12 @@
       <button class="btn btn-secondary" onclick="enterRoom()">进入房间</button>
     </div>
 
+    <!-- 我的房间列表 -->
+    <div class="card" id="myRoomsSection">
+      <div class="card-title">📌 我的房间</div>
+      <div id="myRoomsList"><div class="info-text">加载中...</div></div>
+    </div>
+
     <!-- 开放房间列表 -->
     <div class="card" id="roomListSection">
       <div class="card-title">🎲 可加入房间</div>
@@ -673,6 +679,39 @@
     loadOpenRooms();
   }
 
+  // ==================== 加载我的房间 ====================
+  async function loadMyRooms() {
+    const listEl = document.getElementById("myRoomsList");
+    try {
+      const u = getUser();
+      const r = await fetch(`${API}/api/users/${u.user_id}/rooms`);
+      if (!r.ok) { listEl.innerHTML = '<div class="info-text">加载失败</div>'; return; }
+      const data = await r.json();
+      const rooms = data.rooms || [];
+      if (!rooms.length) { listEl.innerHTML = '<div class="info-text">暂无进行中的房间</div>'; return; }
+      listEl.innerHTML = rooms.map(room => {
+        const isHost = room.host_id === u.user_id;
+        const opponent = isHost ? (room.guest_username || '等待对手') : room.host_username;
+        const statusText = {
+          'OPEN': '等待加入',
+          'FULL': '等待准备',
+          'READY': '准备中',
+          'PLAYING': '游戏中'
+        }[room.status] || room.status;
+        return `
+          <div class="room-item" onclick="enterRoom('${room.room_id}')" style="border-left: 3px solid var(--accent-yellow);">
+            <div class="room-info">
+              <div class="room-id">ID: ${room.room_id}</div>
+              <div class="room-host">对手: @${opponent}</div>
+              <div class="room-bet">💰 ${room.bet_amount} LGW33</div>
+            </div>
+            <div class="room-status ${room.status === 'PLAYING' ? 'full' : 'open'}">${statusText}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) { listEl.innerHTML = '<div class="info-text">请先登录</div>'; }
+  }
+
   // ==================== 加载开放房间 ====================
   async function loadOpenRooms() {
     const listEl = document.getElementById("roomList");
@@ -728,6 +767,7 @@
     }
     // 初始化
     checkBalance();
+    loadMyRooms();
     loadOpenRooms();
   });
 </script>
