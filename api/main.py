@@ -582,8 +582,11 @@ def click_room(room_id: str, body: ClickIn):
         "guest_clicks": clicks["guest_clicks"]
     }
 
+class SettleIn(BaseModel):
+    user: DebugUser
+
 @app.post("/api/rooms/{room_id}/settle")
-async def settle_room(room_id: str, body: DebugUser):
+async def settle_room(room_id: str, body: SettleIn):
     """结算游戏（可由任一玩家或系统触发）"""
     conn = get_conn()
     cur = conn.cursor()
