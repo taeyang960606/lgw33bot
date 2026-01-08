@@ -359,7 +359,7 @@ async def share_room(room_id: str, body: ShareRoomIn):
         f"🎫 押注：<b>{room['bet_amount']} LGW33</b>\n"
         f"🏠 房间ID：<code>{room['room_id']}</code>\n"
         f"发起人：@{room['host_username'] or '玩家'}\n\n"
-        f"💡 点击下方按钮前往机器人，在"可加入房间"列表中找到此房间并加入！"
+        f"💡 点击下方按钮前往机器人，在【可加入房间】列表中找到此房间并加入！"
     )
 
     try:
