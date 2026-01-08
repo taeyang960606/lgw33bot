@@ -677,7 +677,7 @@
   async function loadOpenRooms() {
     const listEl = document.getElementById("roomList");
     try {
-      const r = await fetch(`${API}/api/rooms/open`);
+      const r = await fetch(`${API}/api/rooms/open/list`);
       if (!r.ok) { listEl.innerHTML = '<div class="info-text">加载失败</div>'; return; }
       const rooms = await r.json();
       if (!rooms.length) { listEl.innerHTML = '<div class="info-text">暂无开放房间</div>'; return; }
