@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>LGW33 PK - 游戏</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root{
+      /* 黑色到黄色渐变主题 - 与首页一致 */
+      --bg-primary: #000000;
+      --bg-gradient-start: #000000;
+      --bg-gradient-end: #FFC107;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 193, 7, 0.3);
+      --accent-blue: #2196F3;
+      --accent-yellow: #FFC107;
+      --accent-green: #4CAF50;
+      --accent-red: #F44336;
+      --text-primary: #FFFFFF;
+      --text-secondary: #E0E0E0;
+      --text-muted: #BDBDBD;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+      --radius-md: 16px;
+      --radius-lg: 24px;
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+      color: var(--text-primary);
+      background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .safe{
+      padding: env(safe-area-inset-top, 12px) 14px env(safe-area-inset-bottom, 14px) 14px;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    /* 顶部栏 */
+    .topbar{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+    .balance-card{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 8px 14px;
+      backdrop-filter: blur(10px);
+    }
+    .coin-icon{
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .coin-icon img{ width: 100%; height: 100%; object-fit: contain; }
+    .balance-info{ display: flex; flex-direction: column; }
+    .balance-label{ font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+    .balance-amount{ font-size: 16px; font-weight: 900; color: var(--accent-yellow); }
+    .back-btn{
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .back-btn:active{ transform: scale(0.95); }
+    /* 卡片样式 */
+    .card{
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .card-title{
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    /* 输入框和按钮 */
+    .input{
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--text-primary);
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    .input::placeholder{ color: var(--text-muted); }
+    .input:focus{ border-color: var(--accent-yellow); box-shadow: 0 0 0 3px rgba(255,193,7,0.15); }
+    .btn{
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary{
+      background: linear-gradient(135deg, var(--accent-yellow), #FF9800);
+      color: #000;
+      box-shadow: 0 4px 16px rgba(255,193,7,0.4);
+    }
+    .btn-secondary{
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-primary);
+    }
+    .btn:active{ transform: scale(0.98); }
+    .btn:disabled{ opacity: 0.5; cursor: not-allowed; }
+    .info-text{
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+    .input-row{ display: flex; gap: 10px; margin-bottom: 12px; }
+    .input-row .input{ margin-bottom: 0; }
+    /* 调试区域 */
+    .debug-section{ background: rgba(255,193,7,0.08); border: 1px dashed var(--card-border); }
+    /* VS卡片 */
+    .vs-card{
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .player-card{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .avatar-3d{
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 6px 20px rgba(33,150,243,0.3);
+      position: relative;
+    }
+    .avatar-3d.opponent{
+      background: linear-gradient(135deg, var(--accent-red), var(--accent-yellow));
+      box-shadow: 0 6px 20px rgba(244,67,54,0.3);
+    }
+    .player-name{ font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .status-indicator{
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(0,0,0,0.3); font-size: 10px; font-weight: 600;
+    }
+    .status-dot{
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .vs-divider{
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 8px; border-radius: 12px;
+      background: rgba(0,0,0,0.2);
+    }
+    .vs-text{ font-size: 14px; font-weight: 900; color: var(--text-secondary); letter-spacing: 2px; }
+    .timer-display{
+      font-size: 22px; font-weight: 900; color: var(--accent-yellow);
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 16px rgba(255,193,7,0.5);
+    }
+    /* 分数区域 */
+    .scores-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .score-box{
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .score-box.winning{
+      border-color: var(--accent-green);
+      box-shadow: 0 0 16px rgba(76,175,80,0.3);
+    }
+    .score-label{
+      font-size: 10px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+    }
+    .score-value{
+      font-size: 32px; font-weight: 900; color: var(--text-primary);
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .score-value.pulse{ animation: scorePulse 0.3s ease-out; }
+    @keyframes scorePulse{ 0%{transform:scale(1)} 50%{transform:scale(1.15);color:var(--accent-yellow)} 100%{transform:scale(1)} }
+    /* 点击区域 */
+    .tap-zone{
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; min-height: 220px;
+    }
+    .tap-button{
+      width: min(260px, 70vw); height: min(260px, 70vw);
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 50%),
+                  linear-gradient(135deg, var(--accent-yellow), #FF9800);
+      border: 3px solid rgba(255,255,255,0.3);
+      box-shadow: 0 16px 48px rgba(255,193,7,0.4), inset 0 -6px 20px rgba(0,0,0,0.2);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.1s;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .tap-button::before{
+      content: ''; position: absolute; inset: -16px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,193,7,0.3), transparent 60%);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse{ 0%,100%{transform:scale(0.9);opacity:0.3} 50%{transform:scale(1.1);opacity:0.6} }
+    .tap-button:active{ transform: scale(0.95); box-shadow: 0 8px 24px rgba(255,193,7,0.5); }
+    .tap-icon{ font-size: 56px; position: relative; z-index: 1; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)); }
+    .tap-text{ font-size: 16px; font-weight: 900; color: #000; position: relative; z-index: 1; }
+    .tap-hint{ font-size: 11px; color: rgba(0,0,0,0.7); position: relative; z-index: 1; }
+    /* 浮动分数 */
+    .float-score{
+      position: absolute; font-size: 28px; font-weight: 900;
+      color: var(--accent-yellow);
+      text-shadow: 0 0 16px rgba(255,193,7,0.8);
+      pointer-events: none;
+      animation: floatUp 0.7s ease-out forwards;
+      z-index: 100;
+    }
+    @keyframes floatUp{ 0%{transform:translate(-50%,0) scale(0.5);opacity:0} 20%{opacity:1} 100%{transform:translate(-50%,-80px) scale(1.1);opacity:0} }
+    /* Ready按钮区 */
+    .ready-section{ display: flex; gap: 10px; margin-top: 12px; }
+    .ready-section .btn{ flex: 1; }
+    /* 结果卡片 */
+    .result-card{
+      text-align: center; padding: 24px;
+      background: rgba(0,0,0,0.3); border-radius: var(--radius-lg);
+    }
+    .result-emoji{ font-size: 56px; margin-bottom: 12px; }
+    .result-text{ font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+    .result-details{ font-size: 14px; color: var(--text-secondary); line-height: 1.8; }
+    /* 房间列表 */
+    .room-item{
+      background: rgba(0,0,0,0.3); border-radius: var(--radius-md);
+      padding: 12px; margin-bottom: 8px; cursor: pointer;
+      transition: all 0.2s; display: flex; justify-content: space-between;
+      align-items: center; border: 1px solid rgba(255,255,255,0.08);
+    }
+    .room-item:hover{ background: rgba(0,0,0,0.5); border-color: var(--accent-yellow); }
+    .room-info{ flex: 1; }
+    .room-id{ font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+    .room-host{ font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .room-bet{ font-size: 12px; color: var(--accent-yellow); }
+    .room-status{
+      padding: 5px 10px; border-radius: 999px; font-size: 10px;
+      font-weight: 600; text-transform: uppercase;
+    }
+    .room-status.open{ background: rgba(76,175,80,0.2); color: var(--accent-green); }
+    .room-status.full{ background: rgba(255,193,7,0.2); color: var(--accent-yellow); }
+    /* 底部导航 */
+    .nav{
+      position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: 16px; width: calc(100% - 56px); max-width: 400px;
+      height: 50px; border-radius: 16px;
+      background: var(--accent-yellow);
+      display: flex; align-items: center; justify-content: space-around;
+      box-shadow: var(--shadow-md); z-index: 100;
+    }
+    .nav .item{
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border-radius: 12px;
+      color: #FFF; font-weight: 800; font-size: 11px;
+      cursor: pointer; text-decoration: none; transition: all 0.2s;
+    }
+    .nav .item.active{ background: rgba(0,0,0,0.2); }
+    .nav .i{ font-size: 14px; }
+    /* 隐藏元素 */
+    .hidden{ display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="safe">
+    <!-- 顶部栏 -->
+    <div class="topbar">
+      <div class="balance-card">
+        <div class="coin-icon">
+          <img src="image/token.png" alt="Token" onerror="this.parentElement.innerHTML='🪙'">
+        </div>
+        <div class="balance-info">
+          <div class="balance-label">LGW33</div>
+          <div class="balance-amount" id="balance">--</div>
+        </div>
+      </div>
+      <a href="index.html" class="back-btn">← 首页</a>
+    </div>
+
+    <!-- Debug区域 -->
+    <div class="card debug-section hidden" id="debugSection">
+      <div class="card-title">🔧 调试模式</div>
+      <div class="input-row">
+        <input class="input" id="uid" placeholder="user_id (例如: 12345)" />
+        <input class="input" id="uname" placeholder="username" />
+      </div>
+      <button class="btn btn-secondary" onclick="checkBalance()">查询余额</button>
+    </div>
+
+    <!-- 创建房间区域 -->
+    <div class="card" id="createSection">
+      <div class="card-title">🎮 创建新房间</div>
+      <input class="input" id="bet" placeholder="押注金额 (1-100000 LGW33)" type="number" />
+      <button class="btn btn-primary" onclick="createRoom()">创建房间并邀请对手</button>
+      <div class="info-text hidden" id="roomInfo"></div>
+    </div>
+
+    <!-- 加入房间区域 -->
+    <div class="card" id="joinSection">
+      <div class="card-title">🚪 加入房间</div>
+      <input class="input" id="join_room_id" placeholder="输入房间ID" />
+      <button class="btn btn-secondary" onclick="enterRoom()">进入房间</button>
+    </div>
+
+    <!-- 开放房间列表 -->
+    <div class="card" id="roomListSection">
+      <div class="card-title">🎲 可加入房间</div>
+      <button class="btn btn-secondary" onclick="loadOpenRooms()" style="margin-bottom:10px;">刷新列表</button>
+      <div id="roomList"><div class="info-text">加载中...</div></div>
+    </div>
+
+    <!-- 游戏主界面 -->
+    <div class="card hidden" id="gameSection">
+      <!-- VS卡片 -->
+      <div class="vs-card">
+        <div class="player-card">
+          <div class="avatar-3d"></div>
+          <div class="player-name" id="p1Name">你</div>
+          <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span id="p1Status">在线</span>
+          </div>
+        </div>
+        <div class="vs-divider">
+          <div class="vs-text">VS</div>
+          <div class="timer-display" id="timer">00:30</div>
+        </div>
+        <div class="player-card">
+          <div class="avatar-3d opponent"></div>
+          <div class="player-name" id="p2Name">等待中...</div>
+          <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span id="p2Status">等待</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分数显示 -->
+      <div class="scores-grid">
+        <div class="score-box" id="scoreBox1">
+          <div class="score-label">你的分数</div>
+          <div class="score-value" id="score1">0</div>
+        </div>
+        <div class="score-box" id="scoreBox2">
+          <div class="score-label">对手分数</div>
+          <div class="score-value" id="score2">0</div>
+        </div>
+      </div>
+
+      <!-- Ready状态显示 -->
+      <div class="hidden" id="readyStatusDisplay">
+        <div class="info-text" id="readyStatusText"></div>
+      </div>
+
+      <!-- Ready按钮 -->
+      <div class="ready-section hidden" id="readySection">
+        <button class="btn btn-secondary" onclick="shareRoom()">邀请好友</button>
+        <button class="btn btn-primary" id="readyBtn" onclick="setReady()">准备开始</button>
+      </div>
+
+      <!-- 点击区域 -->
+      <div class="tap-zone hidden" id="tapZone">
+        <div class="tap-button" id="tapBtn">
+          <div class="tap-icon">⚡</div>
+          <div class="tap-text">疯狂点击！</div>
+          <div class="tap-hint">30秒内点击最多获胜</div>
+        </div>
+      </div>
+
+      <!-- 结果显示 -->
+      <div class="result-card hidden" id="resultSection">
+        <div class="result-emoji" id="resultEmoji">🏆</div>
+        <div class="result-text" id="resultText"></div>
+        <div class="result-details" id="resultDetails"></div>
+        <button class="btn btn-primary" onclick="resetGame()" style="margin-top:16px;">再来一局</button>
+      </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="nav" role="navigation">
+      <a href="index.html" class="item"><span class="i">🏠</span> Home</a>
+      <a href="#" class="item active"><span class="i">🎮</span> PK</a>
+    </div>
+  </div>
+
+<script>
+  // ==================== 配置 ====================
+  const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? "http://127.0.0.1:8000" : window.location.origin;
+
+  let currentRoomId = null;
+  let currentRoom = null;
+  let pollInterval = null;
+  let lastClickCount = 0;
+
+  // ==================== Telegram WebApp ====================
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+  }
+
+  // ==================== 工具函数 ====================
+  function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+  function getUser() {
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+      const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+      return { user_id: tgUser.id, username: tgUser.username || tgUser.first_name || null };
+    }
+    const user_id = parseInt(document.getElementById("uid")?.value || "0", 10);
+    const username = document.getElementById("uname")?.value || null;
+    if (!user_id) throw new Error("请先填写 user_id 或从 Telegram 打开");
+    return { user_id, username };
+  }
+
+  // ==================== 余额管理 ====================
+  async function checkBalance() {
+    try {
+      const u = getUser();
+      const r = await fetch(`${API}/api/users/${u.user_id}`);
+      const balanceEl = document.getElementById("balance");
+      if (r.ok) {
+        const data = await r.json();
+        balanceEl.textContent = data.available.toLocaleString();
+      } else {
+        balanceEl.textContent = "1000";
+      }
+    } catch (e) { console.error("查询余额失败:", e); }
+  }
+
+  // ==================== 创建房间 ====================
+  async function createRoom() {
+    try {
+      const u = getUser();
+      const bet_amount = parseInt(document.getElementById("bet").value || "0", 10);
+      if (!bet_amount || bet_amount < 1 || bet_amount > 100000) {
+        alert("请输入有效的押注金额 (1-100000)"); return;
+      }
+      const r = await fetch(`${API}/api/rooms`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ user: u, bet_amount, chat_id: null })
+      });
+      const data = await r.json();
+      if (!r.ok) { alert("创建失败：" + (data.detail || JSON.stringify(data))); return; }
+      currentRoomId = data.room_id;
+      const roomInfoEl = document.getElementById("roomInfo");
+      roomInfoEl.innerHTML = `✅ 房间创建成功！<br>房间ID: <strong>${data.room_id}</strong><br>押注: <strong>${data.bet_amount} LGW33</strong>`;
+      show('roomInfo');
+      await shareRoom();
+      await enterRoom(data.room_id);
+      await checkBalance();
+    } catch (e) { alert("创建房间失败: " + e.message); }
+  }
+
+  // ==================== 分享房间 ====================
+  async function shareRoom() {
+    if (!currentRoomId) { alert("请先创建房间"); return; }
+    try {
+      const u = getUser();
+      const r = await fetch(`${API}/api/rooms/${currentRoomId}/share`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ user: u })
+      });
+      if (r.ok && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert("邀请已发送到游戏群！");
+      }
+    } catch (e) { console.error("分享失败:", e); }
+  }
+
+  // ==================== 进入房间 ====================
+  async function enterRoom(roomId) {
+    const room_id = roomId || currentRoomId || document.getElementById("join_room_id")?.value.trim();
+    if (!room_id) { alert("请输入房间ID"); return; }
+    currentRoomId = room_id;
+    hide('createSection'); hide('joinSection'); hide('roomListSection');
+    show('gameSection');
+    await updateRoomStatus();
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(updateRoomStatus, 1000);
+  }
+
+  // ==================== 更新房间状态 ====================
+  async function updateRoomStatus() {
+    if (!currentRoomId) return;
+    try {
+      const r = await fetch(`${API}/api/rooms/${currentRoomId}`);
+      if (!r.ok) { alert("房间不存在"); return; }
+      currentRoom = await r.json();
+      const u = getUser();
+      const isHost = currentRoom.host_id === u.user_id;
+      const isGuest = currentRoom.guest_id === u.user_id;
+
+      document.getElementById("p1Name").textContent = isHost ? "你" : `@${currentRoom.host_username}`;
+      document.getElementById("p2Name").textContent = currentRoom.guest_username
+        ? (isGuest ? "你" : `@${currentRoom.guest_username}`) : "等待中...";
+
+      if (currentRoom.status === 'OPEN') {
+        hide('readySection'); hide('tapZone'); hide('resultSection'); show('readyStatusDisplay');
+        document.getElementById("readyStatusText").textContent = "等待对手加入房间...";
+      } else if (currentRoom.status === 'FULL') {
+        show('readySection'); hide('tapZone'); hide('resultSection'); show('readyStatusDisplay');
+        const hostReady = currentRoom.host_ready === 1, guestReady = currentRoom.guest_ready === 1;
+        document.getElementById("readyStatusText").innerHTML =
+          `房主: ${hostReady ? '✅ Ready' : '⏳ 未Ready'}<br>客人: ${guestReady ? '✅ Ready' : '⏳ 未Ready'}`;
+        const myReady = (isHost && hostReady) || (isGuest && guestReady);
+        document.getElementById("readyBtn").disabled = myReady;
+        document.getElementById("readyBtn").textContent = myReady ? "已准备 ✅" : "准备开始";
+        document.getElementById("p1Status").textContent = hostReady ? "Ready" : "等待";
+        document.getElementById("p2Status").textContent = guestReady ? "Ready" : "等待";
+      } else if (currentRoom.status === 'PLAYING') {
+        hide('readySection'); hide('readyStatusDisplay'); show('tapZone'); hide('resultSection');
+        const myClicks = isHost ? currentRoom.host_clicks : currentRoom.guest_clicks;
+        const opponentClicks = isHost ? currentRoom.guest_clicks : currentRoom.host_clicks;
+        document.getElementById("score1").textContent = myClicks;
+        document.getElementById("score2").textContent = opponentClicks;
+        document.getElementById("scoreBox1").classList.toggle('winning', myClicks > opponentClicks);
+        document.getElementById("scoreBox2").classList.toggle('winning', opponentClicks > myClicks);
+        if (myClicks > lastClickCount) {
+          document.getElementById("score1").classList.add('pulse');
+          setTimeout(() => document.getElementById("score1").classList.remove('pulse'), 300);
+        }
+        lastClickCount = myClicks;
+        if (currentRoom.game_start_time) {
+          const startTime = new Date(currentRoom.game_start_time + 'Z');
+          const elapsed = (Date.now() - startTime.getTime()) / 1000;
+          const remaining = Math.max(0, Math.ceil(30 - elapsed));
+          const mins = Math.floor(remaining / 60), secs = remaining % 60;
+          document.getElementById("timer").textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+          if (remaining === 0) await settleGame();
+        }
+      } else if (currentRoom.status === 'FINISHED') {
+        hide('readySection'); hide('readyStatusDisplay'); hide('tapZone'); show('resultSection');
+        const winnerId = currentRoom.winner_id;
+        const myClicks = isHost ? currentRoom.host_clicks : currentRoom.guest_clicks;
+        const opponentClicks = isHost ? currentRoom.guest_clicks : currentRoom.host_clicks;
+        if (winnerId === null) {
+          document.getElementById("resultEmoji").textContent = "🤝";
+          document.getElementById("resultText").textContent = "平局！";
+          document.getElementById("resultDetails").innerHTML = `双方退回押注<br><br>你的点击: ${myClicks} 次<br>对手点击: ${opponentClicks} 次`;
+        } else if (winnerId === u.user_id) {
+          document.getElementById("resultEmoji").textContent = "🎉";
+          document.getElementById("resultText").textContent = "你赢了！";
+          document.getElementById("resultDetails").innerHTML = `获得 ${currentRoom.bet_amount * 2} LGW33<br><br>你的点击: ${myClicks} 次<br>对手点击: ${opponentClicks} 次`;
+        } else {
+          document.getElementById("resultEmoji").textContent = "😢";
+          document.getElementById("resultText").textContent = "你输了";
+          document.getElementById("resultDetails").innerHTML = `失去 ${currentRoom.bet_amount} LGW33<br><br>你的点击: ${myClicks} 次<br>对手点击: ${opponentClicks} 次`;
+        }
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        await checkBalance();
+      }
+    } catch (e) { console.error("更新房间状态失败:", e); }
+  }
+
+  // ==================== 设置Ready ====================
+  async function setReady() {
+    if (!currentRoomId) return;
+    try {
+      const u = getUser();
+      const r = await fetch(`${API}/api/rooms/${currentRoomId}/ready`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ user: u })
+      });
+      if (!r.ok) { const d = await r.json(); alert("Ready失败: " + (d.detail || JSON.stringify(d))); }
+      await updateRoomStatus();
+    } catch (e) { alert("Ready失败: " + e.message); }
+  }
+
+  // ==================== 点击处理 ====================
+  async function handleTap(e) {
+    e.preventDefault();
+    if (!currentRoomId || !currentRoom || currentRoom.status !== 'PLAYING') return;
+    // 浮动分数动画
+    const tapZone = document.getElementById("tapZone");
+    const floatScore = document.createElement("div");
+    floatScore.className = "float-score";
+    floatScore.textContent = "+1";
+    const rect = tapZone.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    floatScore.style.left = x + "px";
+    floatScore.style.top = y + "px";
+    tapZone.appendChild(floatScore);
+    setTimeout(() => floatScore.remove(), 700);
+    // 发送点击
+    try {
+      const u = getUser();
+      await fetch(`${API}/api/rooms/${currentRoomId}/click`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ user: u })
+      });
+    } catch (e) { console.error("点击失败:", e); }
+  }
+
+  // ==================== 结算游戏 ====================
+  async function settleGame() {
+    if (!currentRoomId) return;
+    try {
+      const u = getUser();
+      await fetch(`${API}/api/rooms/${currentRoomId}/settle`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ user: u })
+      });
+      await updateRoomStatus();
+    } catch (e) { console.error("结算失败:", e); }
+  }
+
+  // ==================== 重置游戏 ====================
+  function resetGame() {
+    currentRoomId = null;
+    currentRoom = null;
+    lastClickCount = 0;
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    hide('gameSection'); show('createSection'); show('joinSection'); show('roomListSection');
+    document.getElementById("bet").value = "";
+    document.getElementById("join_room_id").value = "";
+    hide('roomInfo');
+    loadOpenRooms();
+  }
+
+  // ==================== 加载开放房间 ====================
+  async function loadOpenRooms() {
+    const listEl = document.getElementById("roomList");
+    try {
+      const r = await fetch(`${API}/api/rooms/open`);
+      if (!r.ok) { listEl.innerHTML = '<div class="info-text">加载失败</div>'; return; }
+      const rooms = await r.json();
+      if (!rooms.length) { listEl.innerHTML = '<div class="info-text">暂无开放房间</div>'; return; }
+      listEl.innerHTML = rooms.map(room => `
+        <div class="room-item" onclick="joinRoom('${room.room_id}')">
+          <div class="room-info">
+            <div class="room-id">ID: ${room.room_id}</div>
+            <div class="room-host">@${room.host_username || '匿名'}</div>
+            <div class="room-bet">💰 ${room.bet_amount} LGW33</div>
+          </div>
+          <div class="room-status ${room.status === 'OPEN' ? 'open' : 'full'}">${room.status}</div>
+        </div>
+      `).join('');
+    } catch (e) { listEl.innerHTML = '<div class="info-text">加载失败: ' + e.message + '</div>'; }
+  }
+
+  // ==================== 加入房间 ====================
+  async function joinRoom(roomId) {
+    try {
+      const u = getUser();
+      const r = await fetch(`${API}/api/rooms/${roomId}/join`, {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ user: u })
+      });
+      if (!r.ok) { const d = await r.json(); alert("加入失败: " + (d.detail || JSON.stringify(d))); return; }
+      currentRoomId = roomId;
+      await enterRoom(roomId);
+      await checkBalance();
+    } catch (e) { alert("加入失败: " + e.message); }
+  }
+
+  // ==================== 初始化 ====================
+  document.addEventListener("DOMContentLoaded", () => {
+    // 检查是否在Telegram环境
+    if (!window.Telegram?.WebApp?.initDataUnsafe?.user) {
+      show('debugSection');
+    }
+    // 绑定点击事件
+    const tapBtn = document.getElementById("tapBtn");
+    tapBtn.addEventListener("click", handleTap);
+    tapBtn.addEventListener("touchstart", handleTap, { passive: false });
+    // 检查URL参数
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get('room_id');
+    if (roomId) {
+      currentRoomId = roomId;
+      setTimeout(() => joinRoom(roomId), 500);
+    }
+    // 初始化
+    checkBalance();
+    loadOpenRooms();
+  });
+</script>
+</body>
+</html>
+
